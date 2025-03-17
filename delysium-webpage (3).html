@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delysium 项目分析报告 - 区块链与AI的创新融合</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --secondary-color: #10B981;
+            --accent-color: #8B5CF6;
+            --dark-bg: #111827;
+            --dark-card: #1F2937;
+            --dark-text: #F9FAFB;
+            --light-bg: #F9FAFB;
+            --light-card: #FFFFFF;
+            --light-text: #111827;
+            --border-radius: 1rem;
+            --transition: all 0.3s ease;
+        }
+
+        /* 基础样式 */
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            line-height: 1.7;
+            transition: var(--transition);
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .dark {
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+        }
+
+        .light {
+            background-color: var(--light-bg);
+            color: var(--light-text);
+        }
+
+        /* 卡片样式 */
+        .card {
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .dark .card {
+            background-color: var(--dark-card);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .light .card {
+            background-color: var(--light-card);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            border-radius: 0.5rem;
+            transition: var(--transition);
+            padding: 0.5rem 1.25rem;
+            cursor: pointer;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-outline {
+            border: 2px solid;
+            background-color: transparent;
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* 导航栏样式 */
+        .nav-link {
+            position: relative;
+            transition: var(--transition);
+            font-weight: 500;
+            padding: 0.5rem 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .dark .nav-link:hover {
+            color: white;
+        }
+
+        .light .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        /* Hero 区域样式 */
+        .hero {
+            background: linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNjAwIiB2aWV3Qm94PSIwIDAgNjAwIDYwMCI+CiAgPHJlY3Qgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9Im5vbmUiIC8+CiAgPHBhdGggZD0iTTUwMCAxMDBIMjAwTDEwMCA1MDBsNDAwLTEwMHoiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjIpIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIC8+CiAgPGNpcmNsZSBjeD0iMjUwIiBjeT0iMzUwIiByPSIxMDAiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjIpIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIC8+CiAgPGNpcmNsZSBjeD0iNDUwIiBjeT0iMTUwIiByPSI1MCIgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMikiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0ibm9uZSIgLz4KPC9zdmc+') repeat;
+            opacity: 0.1;
+        }
+
+        /* 首字下沉 */
+        .first-letter-drop:first-letter {
+            font-size: 3.5rem;
+            font-weight: 700;
+            float: left;
+            line-height: 1;
+            padding-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        /* 表格样式 */
+        .custom-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+
+        .custom-table th, .custom-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid;
+        }
+
+        .dark .custom-table th, .dark .custom-table td {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .light .custom-table th, .light .custom-table td {
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-table th {
+            font-weight: 600;
+        }
+
+        .dark .custom-table th {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .light .custom-table th {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 标签样式 */
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .tag:hover {
+            transform: translateY(-2px);
+        }
+
+        .tag-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tag-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .tag-accent {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* 进度条样式 */
+        .progress {
+            height: 0.5rem;
+            border-radius: 9999px;
+            overflow: hidden;
+            background-color: rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+        }
+
+        .dark .progress {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 9999px;
+            transition: width 1s ease;
+        }
+
+        /* 技术栈可视化 */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+            justify-content: center;
+        }
+
+        .tech-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            width: 6rem;
+            transition: var(--transition);
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .tech-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary-color);
+            transition: var(--transition);
+        }
+
+        .tech-item:hover .tech-icon {
+            color: var(--accent-color);
+        }
+
+        /* 自定义动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dark::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .light::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--primary-color);
+        }
+
+        /* 数据可视化样式 */
+        .mermaid {
+            margin: 2rem auto;
+            display: flex;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+        }
+
+        .dark .mermaid {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .light .mermaid {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        /* 引用样式 */
+        blockquote {
+            border-left: 4px solid var(--primary-color);
+            padding-left: 1rem;
+            font-style: italic;
+            margin: 1.5rem 0;
+            color: var(--accent-color);
+        }
+
+        /* 时间线样式 */
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 2rem auto;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background-color: var(--primary-color);
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            margin-left: -2px;
+            opacity: 0.3;
+        }
+
+        .timeline-container {
+            position: relative;
+            width: 50%;
+            padding: 0 2.5rem 2.5rem 0;
+        }
+
+        .timeline-container.right {
+            left: 50%;
+            padding: 0 0 2.5rem 2.5rem;
+        }
+
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            right: -10px;
+            top: 0;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            z-index: 1;
+        }
+
+        .timeline-container.right::after {
+            left: -10px;
+        }
+
+        .timeline-content {
+            position: relative;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .dark .timeline-content {
+            background-color: var(--dark-card);
+        }
+
+        .light .timeline-content {
+            background-color: var(--light-card);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-content:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 数字指标动画 */
+        .stat-count {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+            display: inline-block;
+        }
+
+        .stat-item:hover .stat-count {
+            transform: scale(1.1);
+            color: var(--accent-color);
+        }
+
+        /* 特性列表样式 */
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+        }
+
+        .feature-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid;
+            display: flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .dark .feature-list li {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .light .feature-list li {
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li:hover {
+            padding-left: 0.5rem;
+        }
+
+        .feature-list li i {
+            color: var(--secondary-color);
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+            transition: var(--transition);
+        }
+
+        .feature-list li:hover i {
+            color: var(--accent-color);
+            transform: scale(1.2);
+        }
+
+        /* 导航悬浮效果 */
+        .header-shadow {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 圆形图标容器 */
+        .icon-circle {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            transition: var(--transition);
+        }
+
+        .icon-circle i {
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .card:hover .icon-circle {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .card:hover .icon-circle i {
+            transform: rotate(10deg);
+        }
+
+        /* 章节标题样式 */
+        .section-title {
+            position: relative;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        /* 亮点块 */
+        .highlight-block {
+            position: relative;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+
+        .dark .highlight-block {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+        }
+
+        .light .highlight-block {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .highlight-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj4KICA8Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDAsIDAsIDAsIDAuMSkiIC8+Cjwvc3ZnPg==') repeat;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        /* 团队成员卡片 */
+        .team-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .team-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 1.5rem;
+            transform: translateY(100%);
+            transition: var(--transition);
+        }
+
+        .team-card:hover .team-info {
+            transform: translateY(0);
+        }
+
+        .team-card img {
+            transition: var(--transition);
+        }
+
+        .team-card:hover img {
+            transform: scale(1.05);
+        }
+
+        /* 移动导航 */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--dark-bg);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-menu.active {
+            transform: translateX(0);
+        }
+
+        .mobile-menu a {
+            font-size: 1.25rem;
+            padding: 1rem;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .mobile-menu a:hover {
+            color: var(--accent-color);
+        }
+
+        /* 媒体查询 */
+        @media (max-width: 768px) {
+            .timeline::after {
+                left: 31px;
+            }
+            .timeline-container {
+                width: 100%;
+                padding-left: 70px;
+                padding-right: 25px;
+            }
+            .timeline-container.right {
+                left: 0;
+                padding-left: 70px;
+            }
+            .timeline-container::after {
+                left: 21px;
+            }
+            .timeline-container.right::after {
+                left: 21px;
+            }
+        }
+
+        /* 延迟加载动画 */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+    </style>
+</head>
+<body class="light">
+    <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white dark:bg-gray-900">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mr-10">
+                    <i class="fas fa-cube mr-2"></i>Delysium
+                </h1>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#overview" class="nav-link dark:text-gray-300">概述</a>
+                    <a href="#tech" class="nav-link dark:text-gray-300">技术架构</a>
+                    <a href="#token" class="nav-link dark:text-gray-300">代币经济</a>
+                    <a href="#game" class="nav-link dark:text-gray-300">游戏系统</a>
+                    <a href="#roadmap" class="nav-link dark:text-gray-300">发展路线</a>
+                    <a href="#team" class="nav-link dark:text-gray-300">团队与合作</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:block text-yellow-300"></i>
+                </button>
+                <a href="#" class="hidden md:inline-block btn btn-primary">
+                    <i class="fas fa-external-link-alt mr-2"></i>访问官网
+                </a>
+                <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="mobile-menu" class="mobile-menu dark:bg-gray-900">
+        <button id="mobile-menu-close" class="absolute top-4 right-4 p-2 text-white">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+        <a href="#overview" class="mobile-link">概述</a>
+        <a href="#tech" class="mobile-link">技术架构</a>
+        <a href="#token" class="mobile-link">代币经济</a>
+        <a href="#game" class="mobile-link">游戏系统</a>
+        <a href="#roadmap" class="mobile-link">发展路线</a>
+        <a href="#team" class="mobile-link">团队与合作</a>
+    </div>
+
+    <main class="pt-20">
+        <!-- Hero 区域 -->
+        <section class="hero py-20 px-4 text-white relative">
+            <div class="container mx-auto relative z-10">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="md:w-2/3 mb-10 md:mb-0">
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight fade-in">
+                            Delysium<br>
+                            <span class="text-indigo-300">区块链与AI的创新融合</span>
+                        </h1>
+                        <p class="text-xl md:text-2xl mb-8 max-w-2xl fade-in delay-100">
+                            开创性的人工智能代理网络，通过Lucy人工智能驱动的Web3操作系统和YKILY网络增强区块链交互体验。
+                        </p>
+                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 fade-in delay-200">
+                            <a href="#tech" class="btn bg-white text-indigo-600 hover:bg-indigo-100 font-medium">
+                                <i class="fas fa-microchip mr-2"></i>技术架构
+                            </a>
+                            <a href="#overview" class="btn bg-transparent border-2 border-white hover:bg-white/10">
+                                <i class="fas fa-info-circle mr-2"></i>了解更多
+                            </a>
+                        </div>
+                    </div>
+                    <div class="md:w-1/3 flex justify-center fade-in delay-300">
+                        <div class="relative w-64 h-64">
+                            <div class="absolute inset-0 rounded-full bg-indigo-700 opacity-20 animate-pulse"></div>
+                            <div class="absolute inset-4 rounded-full bg-indigo-600 opacity-40"></div>
+                            <div class="absolute inset-8 rounded-full bg-indigo-500 opacity-60 flex items-center justify-center">
+                                <i class="fas fa-robot text-6xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 关键数据指标 -->
+        <section class="py-12 px-4 bg-gray-50 dark:bg-gray-800">
+            <div class="container mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="card p-6 text-center stat-item">
+                        <i class="fas fa-users text-4xl text-indigo-500 mb-4"></i>
+                        <div class="stat-count">100万+</div>
+                        <div class="text-gray-600 dark:text-gray-300">活跃钱包用户</div>
+                    </div>
+                    <div class="card p-6 text-center stat-item">
+                        <i class="fas fa-exchange-alt text-4xl text-indigo-500 mb-4"></i>
+                        <div class="stat-count">100万+</div>
+                        <div class="text-gray-600 dark:text-gray-300">交易记录</div>
+                    </div>
+                    <div class="card p-6 text-center stat-item">
+                        <i class="fas fa-coins text-4xl text-indigo-500 mb-4"></i>
+                        <div class="stat-count">30亿</div>
+                        <div class="text-gray-600 dark:text-gray-300">$AGI代币总供应</div>
+                    </div>
+                    <div class="card p-6 text-center stat-item">
+                        <i class="fas fa-robot text-4xl text-indigo-500 mb-4"></i>
+                        <div class="stat-count">Beta</div>
+                        <div class="text-gray-600 dark:text-gray-300">Lucy AI 当前版本</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速概览 -->
+        <section id="overview" class="py-16 px-4 bg-gray-100 dark:bg-gray-800">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-chart-pie text-indigo-600 dark:text-indigo-400 mr-3"></i>项目概览
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- 卡片1：执行摘要 -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-file-alt text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">执行摘要</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            Delysium 是一个开创性的人工智能代理网络，旨在通过其 Lucy 人工智能驱动的 Web3 操作系统和 YKILY 网络来增强 Web3 交互。该项目独特地结合了人工智能代理基础设施和面向用户的应用程序。
+                        </p>
+                    </div>
+                    
+                    <!-- 卡片2：项目目标与愿景 -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-bullseye text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">项目目标与愿景</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            构建一个基于区块链的人工智能代理协作网络，包括 Lucy 和 YKILY 网络，目标是实现"区块链赋能人工智能"和"人工智能服务人类"，创建一个虚拟世界，让数十亿人类和人工智能虚拟生物在区块链上共存。
+                        </p>
+                    </div>
+                    
+                    <!-- 卡片3：人工智能虚拟生物 -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-brain text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">人工智能虚拟生物</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            人工智能虚拟生物是 Delysium 生态系统内智能、自主的实体，拥有神经大脑系统，能够进行独立行动。这些生物不仅是非玩家角色，还可以成为伙伴，根据互动进化，拥有资产，参与游戏并赚取收入。
+                        </p>
+                    </div>
+                    
+                    <!-- 卡片4：YKILY 网络 -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-network-wired text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">YKILY 网络</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            "You Know I Love You"（YKILY）网络是一个基于区块链的协作网络，也是"人工智能代理的原生数字金融基础设施"。旨在为众多人工智能代理提供安全性、可扩展性、高速通信、协作和无需许可的交易。
+                        </p>
+                    </div>
+                    
+                    <!-- 卡片5：Lucy AI -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-robot text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">Lucy AI</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            Lucy 作为 YKILY 网络上的第一个代理运行，充当人工智能驱动的 Web3 操作系统。Lucy Alpha 已记录了超过 100 万个钱包和超过 100 万笔交易，Beta 测试版已推出并设有候补名单。
+                        </p>
+                    </div>
+                    
+                    <!-- 卡片6：区块链游戏 -->
+                    <div class="card p-6 hover:shadow-lg transition-shadow">
+                        <div class="flex items-center mb-4">
+                            <div class="icon-circle bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-gamepad text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">区块链游戏</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            Delysium 开发了一款背景设定在 2070 年的反乌托邦未来、具有赛博朋克艺术风格的开放世界、人工智能驱动、玩家拥有的 MMO 游戏，已作为首款可玩的 AAA 级区块链游戏在 Epic Games Store 上架。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 技术架构 -->
+        <section id="tech" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-microchip text-indigo-600 dark:text-indigo-400 mr-3"></i>技术架构
+                </h2>
+                
+                <div class="mb-12">
+                    <div class="card p-8">
+                        <h3 class="text-2xl font-semibold mb-6">Delysium 技术栈概览</h3>
+                        
+                        <!-- 技术架构图 -->
+                        <div class="mermaid">
+                            graph TD
+                                A[用户应用层] --> B[人工智能代理网络]
+                                B --> C[通信层/基础层]
+                                B --> D[区块链层]
+                                D --> E[纪元协议]
+                                C --> F[统一通信协议]
+                                D --> G[代理ID系统]
+                                A --> H[Delysium 游戏]
+                                A --> I[Lucy Web3 OS]
+                                B --> J[YKILY网络]
+                                
+                                classDef primary fill:#4F46E5,stroke:#4F46E5,color:white;
+                                classDef secondary fill:#10B981,stroke:#10B981,color:white;
+                                classDef accent fill:#8B5CF6,stroke:#8B5CF6,color:white;
+                                
+                                class A,H,I primary;
+                                class B,C,F secondary;
+                                class D,E,G,J accent;
+                        </div>
+                        
+                        <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- 人工智能代理网络 -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-network-wired text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    人工智能代理网络
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    Delysium 的架构旨在支持可扩展且去中心化的人工智能代理网络。该网络促进高效的实时代理间通信，访问高级数据集和其他代理工具。安全透明的区块链层通过特定的协议确保代理的行为是负责任的并符合网络意图。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>支持可扩展的代理通信</li>
+                                    <li>提供高级数据集访问</li>
+                                    <li>确保代理行为可控与透明</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 通信层 -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-exchange-alt text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    通信层（基础层）
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    作为网络的主干，为人工智能代理之间的有效通信提供安全且可扩展的基础设施。包含统一通信协议套件，标准化交互、服务发现、接口定义和寻址系统，并由易于集成的 SDK 提供支持。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>统一通信协议套件</li>
+                                    <li>标准化交互与服务发现</li>
+                                    <li>开发者友好的SDK支持</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 区块链层 -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-cube text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    区块链层
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    充当治理核心，确保代理的道德行为和服务可信度，同时提供用户控制界面。采用区块链技术为生态系统带来透明度和去中心化，促进开放数据访问并通过源代码验证增强信任。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>透明的去中心化治理</li>
+                                    <li>开放数据访问与验证</li>
+                                    <li>AI代理行为的责任追溯</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 纪元协议 -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-history text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    纪元协议
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    一种区块链协议，旨在安全地记录人工智能代理决策和交互的关键方面，而不会损害隐私或安全性。将记录 Delysium ONE 平台内人工智能代理的决策和交互。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>安全记录AI代理决策</li>
+                                    <li>保护隐私的审计机制</li>
+                                    <li>提供不可变的交互记录</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 代理ID -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-id-card text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    代理ID
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    网络中为每个人工智能代理分配的唯一标识符，有助于跟踪和验证操作和交互，确保责任和安全。充当 YKILY 网络上人工智能代理的数字护照，实现对数字交互的自主管理。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>唯一标识的数字护照</li>
+                                    <li>追踪交互与责任</li>
+                                    <li>简化身份验证与管理</li>
+                                </ul>
+                            </div>
+                            
+                            <!-- Lucy AI -->
+                            <div>
+                                <h4 class="text-xl font-semibold mb-3 flex items-center">
+                                    <i class="fas fa-robot text-indigo-600 dark:text-indigo-400 mr-2"></i>
+                                    Lucy AI
+                                </h4>
+                                <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                    作为 YKILY 网络上的第一个代理运行，充当人工智能驱动的 Web3 操作系统。通过自然语言处理，简化用户与区块链的交互，实现无缝的 Web3 体验。
+                                </p>
+                                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2 pl-4">
+                                    <li>基于自然语言的交互界面</li>
+                                    <li>自动化区块链操作</li>
+                                    <li>个性化用户体验</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 技术亮点 -->
+                <div class="highlight-block">
+                    <h3 class="text-2xl font-semibold mb-6 text-center">技术创新亮点</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="bg-indigo-100 dark:bg-indigo-900 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-project-diagram text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">去中心化AI网络</h4>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                通过区块链技术实现去中心化AI代理协作，确保透明性与公平性
+                            </p>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-indigo-100 dark:bg-indigo-900 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-comments text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">自然语言Web3交互</h4>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                通过Lucy AI简化与区块链的交互，降低Web3使用门槛
+                            </p>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-indigo-100 dark:bg-indigo-900 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-shield-alt text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h4 class="text-lg font-semibold mb-2">安全审计与追溯</h4>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                通过纪元协议记录AI决策过程，确保AI行为的可追溯与责任
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 代币经济 -->
+        <section id="token" class="py-16 px-4 bg-gray-100 dark:bg-gray-800">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-coins text-indigo-600 dark:text-indigo-400 mr-3"></i>$AGI 代币经济
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="card p-6">
+                            <h3 class="text-2xl font-semibold mb-4">代币概览</h3>
+                            <p class="text-gray-700 dark:text-gray-300 mb-6">
+                                $AGI 代币是 Delysium 生态系统的核心，总供应量上限为 30 亿，在以太坊和 BNB 链上无缝运行。它旨在成为促进凝聚力和蓬勃发展的社区的主要工具，通过协调开发者、用户、治理者、投资者和所有贡献者的利益。
+                            </p>
+                            
+                            <h4 class="text-xl font-semibold mb-3">代币分配</h4>
+                            <div class="relative h-80">
+                                <!-- 使用 Mermaid 创建饼图 -->
+                                <div class="mermaid">
+                                    pie title $AGI 代币分配
+                                    "生态系统建设" : 39
+                                    "核心贡献者" : 20
+                                    "投资者" : 10
+                                    "节点发布与社区建设" : 20
+                                    "长期国库" : 8
+                                    "顾问" : 3
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <h4 class="text-xl font-semibold mb-3">代币实用性</h4>
+                                <ul class="feature-list">
+                                    <li><i class="fas fa-check-circle"></i>支付网络维护费用，确保人工智能代理的平稳安全运行</li>
+                                    <li><i class="fas fa-check-circle"></i>注册新的人工智能代理，作为质量控制和垃圾邮件预防机制</li>
+                                    <li><i class="fas fa-check-circle"></i>访问网络内的基本服务，如专有算法、专业数据集和增强的处理能力</li>
+                                    <li><i class="fas fa-check-circle"></i>促进代理能力的动态扩展，确保最佳性能和成本效益</li>
+                                    <li><i class="fas fa-check-circle"></i>实现代理间服务交易和生态系统治理</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="card p-6">
+                            <h3 class="text-2xl font-semibold mb-4">质押机制</h3>
+                            <div class="mb-6">
+                                <img src="/api/placeholder/400/200" alt="质押流程示意图" class="w-full rounded-lg mb-4">
+                                <p class="text-gray-700 dark:text-gray-300">
+                                    Delysium 为 $AGI 代币持有者提供质押机制，根据质押金额和质押时长获得丰厚回报。
+                                </p>
+                            </div>
+                            
+                            <h4 class="text-xl font-semibold mb-3">质押参数</h4>
+                            <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                                <li class="flex items-center">
+                                    <i class="fas fa-dot-circle text-indigo-500 mr-2"></i>
+                                    <span>最低质押金额: <strong>10 $AGI</strong></span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-dot-circle text-indigo-500 mr-2"></i>
+                                    <span>质押期限: <strong>1个月, 3个月, 6个月</strong></span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-dot-circle text-indigo-500 mr-2"></i>
+                                    <span>质押奖励: <strong>根据质押金额和时长自动计算</strong></span>
+                                </li>
+                            </ul>
+                            
+                            <div class="mt-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                                <h4 class="font-semibold mb-2 flex items-center">
+                                    <i class="fas fa-info-circle text-indigo-500 mr-2"></i>
+                                    质押优势
+                                </h4>
+                                <ul class="space-y-1 text-gray-700 dark:text-gray-300 text-sm">
+                                    <li>• 获得被动收入流</li>
+                                    <li>• 参与生态系统治理</li>
+                                    <li>• 获取早期功能访问权</li>
+                                    <li>• 增强网络安全与稳定性</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 游戏系统 -->
+        <section id="game" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-gamepad text-indigo-600 dark:text-indigo-400 mr-3"></i>区块链游戏系统
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12">
+                    <div>
+                        <div class="rounded-xl overflow-hidden mb-6 shadow-lg">
+                            <img src="/api/placeholder/600/400" alt="Delysium游戏场景" class="w-full">
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-4">赛博朋克开放世界</h3>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            背景设定在 2070 年的反乌托邦未来，具有赛博朋克艺术风格的开放世界、人工智能驱动、玩家拥有的 MMO 游戏。玩家可以利用电子身体增强自身能力并使用先进武器，在可破坏的环境中探索世界。
+                        </p>
+                        <div class="mt-6">
+                            <span class="tag tag-primary">开放世界</span>
+                            <span class="tag tag-secondary">赛博朋克</span>
+                            <span class="tag tag-accent">可破坏环境</span>
+                            <span class="tag tag-primary">电子身体增强</span>
+                            <span class="tag tag-secondary">AAA级游戏</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="rounded-xl overflow-hidden mb-6 shadow-lg">
+                            <img src="/api/placeholder/600/400" alt="AI虚拟生物交互" class="w-full">
+                        </div>
+                        <h3 class="text-2xl font-semibold mb-4">AI虚拟生物生态</h3>
+                        <p class="text-gray-700 dark:text-gray-300">
+                            高智能人工智能元生物与玩家共同居住在世界中，拥有深入的成长系统。玩家的行为会影响人工智能虚拟生物；它们是活着的，并且会学习。玩家可以与它们交谈，发现秘密，建立联系，并创造自己的故事。
+                        </p>
+                        <div class="mt-6">
+                            <span class="tag tag-primary">AI伙伴</span>
+                            <span class="tag tag-secondary">深度学习</span>
+                            <span class="tag tag-accent">情感联系</span>
+                            <span class="tag tag-primary">自然语言交互</span>
+                            <span class="tag tag-secondary">进化系统</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 游戏特性 -->
+                <div class="card p-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-center">核心游戏特性</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-vr-cardboard text-3xl text-indigo-500 mr-3"></i>
+                                <h4 class="text-xl font-semibold">沉浸式体验</h4>
+                            </div>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                支持玩家与原生人工智能虚拟生物共同创造各种个性化的物理和叙事资产，打造独一无二的游戏体验。
+                            </p>
+                            <div class="mt-4">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 95%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>沉浸度</span>
+                                    <span>95%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-cubes text-3xl text-indigo-500 mr-3"></i>
+                                <h4 class="text-xl font-semibold">区块链资产</h4>
+                            </div>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                游戏中的所有数字资产都是 NFT，赋予玩家真正的所有权并能够在去中心化市场上进行交易，实现真正的数字所有权。
+                            </p>
+                            <div class="mt-4">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 100%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>资产所有权</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center mb-3">
+                                <i class="fas fa-gamepad text-3xl text-indigo-500 mr-3"></i>
+                                <h4 class="text-xl font-semibold">多样游戏模式</h4>
+                            </div>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                包括主要的 PvP 大逃杀模式，计划推出 MMO 模式和用户生成内容，确保多样化的游戏体验并不断拓展游戏内容。
+                            </p>
+                            <div class="mt-4">
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 75%"></div>
+                                </div>
+                                <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                                    <span>多样性</span>
+                                    <span>75%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-10">
+                        <h4 class="text-xl font-semibold mb-4">边玩边赚机制</h4>
+                        <p class="text-gray-700 dark:text-gray-300 mb-6">
+                            玩家可以通过参与各种游戏模式赚取包含代币、NFT 和游戏资源的战利品箱。人工智能虚拟生物与玩家拥有相同的权利：它们可以拥有资产，参与不同的游戏模式并赚取收入。
+                        </p>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex-1 min-w-[250px] bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                                    <h5 class="font-semibold">任务奖励</h5>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">完成任务和挑战获得代币和物品奖励</p>
+                            </div>
+                            <div class="flex-1 min-w-[250px] bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-store text-yellow-500 mr-2"></i>
+                                    <h5 class="font-semibold">NFT交易</h5>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">创建、收集和交易稀有游戏内NFT资产</p>
+                            </div>
+                            <div class="flex-1 min-w-[250px] bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-robot text-yellow-500 mr-2"></i>
+                                    <h5 class="font-semibold">AI伙伴收益</h5>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-300">训练AI伙伴完成任务和提供服务获取收益</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 发展路线 -->
+        <section id="roadmap" class="py-16 px-4 bg-gray-100 dark:bg-gray-800">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-road text-indigo-600 dark:text-indigo-400 mr-3"></i>发展路线
+                </h2>
+                
+                <div class="timeline">
+                    <!-- 时间线项目：起始 -->
+                    <div class="timeline-container">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2022年1月</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                Delysium正式推出，开始构建区块链与AI融合的创新平台。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：首轮融资 -->
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2022年3月</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                完成首轮400万美元的私募融资，并推出其市场。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：战略融资 -->
+                    <div class="timeline-container">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2022年10月</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                又融资1000万美元的战略资金，加速产品开发与技术创新。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：代币上市 -->
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2023年4月</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                $AGI代币正式进入市场，为生态系统提供流动性和实用功能。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：Lucy Alpha -->
+                    <div class="timeline-container">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2023年Q3</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                Lucy Alpha版本记录超过100万个钱包和100万笔交易，展示强大的用户增长。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：游戏上架 -->
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2023年Q4</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                作为首款可玩的AAA级区块链游戏在Epic Games Store上架，扩大用户基础。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：Lucy Beta -->
+                    <div class="timeline-container">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2024年Q1</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                Lucy Beta测试版推出，设有候补名单，进一步完善AI驱动的Web3操作系统。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：完整游戏 -->
+                    <div class="timeline-container right">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">2025年计划</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                完整游戏（包括PVP和PVE组件）计划发布，提供全面的游戏体验。
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- 时间线项目：未来发展 -->
+                    <div class="timeline-container">
+                        <div class="timeline-content">
+                            <h3 class="text-xl font-semibold mb-2">未来发展</h3>
+                            <p class="text-gray-700 dark:text-gray-300">
+                                Lucy可能转变为下一代Web3人工智能搜索引擎，扩展人工智能代理生态系统，并在YKILY网络上引入更多人工智能代理。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 团队与合作 -->
+        <section id="team" class="py-16 px-4">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-users text-indigo-600 dark:text-indigo-400 mr-3"></i>团队与合作伙伴
+                </h2>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-semibold mb-6 text-center">核心团队</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        <!-- 团队成员1 -->
+                        <div class="card overflow-hidden">
+                            <div class="relative h-60">
+                                <img src="/api/placeholder/300/300" alt="Yuheng Chan" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                                    <div class="p-4 text-white">
+                                        <div class="mb-1">
+                                            <i class="fab fa-linkedin text-indigo-300 mr-1"></i>
+                                            <i class="fab fa-twitter text-indigo-300"></i>
+                                        </div>
+                                        <p class="text-sm">曾担任Raven Tech的首席运营官</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold">Yuheng Chan</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">CEO & 创始人</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 团队成员2 -->
+                        <div class="card overflow-hidden">
+                            <div class="relative h-60">
+                                <img src="/api/placeholder/300/300" alt="Yan Zhang" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                                    <div class="p-4 text-white">
+                                        <div class="mb-1">
+                                            <i class="fab fa-linkedin text-indigo-300 mr-1"></i>
+                                            <i class="fab fa-github text-indigo-300"></i>
+                                        </div>
+                                        <p class="text-sm">曾在NVIDIA、卡内基梅隆大学、百度和宝马集团工作</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold">Yan Zhang</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">CTO & 联合创始人</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 团队成员3 -->
+                        <div class="card overflow-hidden">
+                            <div class="relative h-60">
+                                <img src="/api/placeholder/300/300" alt="Queena Tsai" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                                    <div class="p-4 text-white">
+                                        <div class="mb-1">
+                                            <i class="fab fa-linkedin text-indigo-300 mr-1"></i>
+                                            <i class="fab fa-twitter text-indigo-300"></i>
+                                        </div>
+                                        <p class="text-sm">在业务发展方面拥有丰富经验，是rct AI的联合创始人</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold">Queena Tsai</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">首席商务官 & 联合创始人</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 团队成员4 -->
+                        <div class="card overflow-hidden">
+                            <div class="relative h-60">
+                                <img src="/api/placeholder/300/300" alt="Jerry Zhang" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                                    <div class="p-4 text-white">
+                                        <div class="mb-1">
+                                            <i class="fab fa-linkedin text-indigo-300 mr-1"></i>
+                                            <i class="fab fa-github text-indigo-300"></i>
+                                        </div>
+                                        <p class="text-sm">区块链技术专家，拥有丰富的分布式系统开发经验</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold">Jerry Zhang</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">联合创始人</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 团队成员5 -->
+                        <div class="card overflow-hidden">
+                            <div class="relative h-60">
+                                <img src="/api/placeholder/300/300" alt="Xiankun Wu" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end">
+                                    <div class="p-4 text-white">
+                                        <div class="mb-1">
+                                            <i class="fab fa-linkedin text-indigo-300 mr-1"></i>
+                                            <i class="fab fa-github text-indigo-300"></i>
+                                        </div>
+                                        <p class="text-sm">游戏开发专家，拥有多年AAA级游戏开发经验</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-semibold">Xiankun Wu</h4>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">联合创始人</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 合作伙伴 -->
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">战略合作伙伴</h3>
+                    <div class="bg-white dark:bg-gray-900 rounded-xl p-8 shadow-lg">
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8">
+                            <div class="flex items-center justify-center">
+                                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <i class="fab fa-microsoft text-5xl text-gray-500"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <i class="fab fa-google text-5xl text-gray-500"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-cube text-5xl text-gray-500"></i>
+                                    <span class="ml-1 font-bold">BNB</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <i class="fab fa-ethereum text-5xl text-gray-500"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <img src="/api/placeholder/80/80" alt="Worldcoin" class="w-16 h-16 object-contain">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-10">
+                            <h4 class="text-xl font-semibold mb-4 text-center">投资者</h4>
+                            <div class="flex flex-wrap justify-center gap-4">
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Galaxy Interactive</span>
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Republic Crypto</span>
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Anthos Capital</span>
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Alameda Research</span>
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">Immutable</span>
+                                <span class="tag bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">GSR</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 社区与生态系统 -->
+        <section class="py-16 px-4 bg-gray-100 dark:bg-gray-800">
+            <div class="container mx-auto">
+                <h2 class="text-3xl font-bold mb-10 text-center section-title">
+                    <i class="fas fa-globe text-indigo-600 dark:text-indigo-400 mr-3"></i>社区与生态系统
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="card p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-4">
+                                <i class="fas fa-users text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">全球社区</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">
+                            拥有庞大且活跃的全球社区，超过140万个独立钱包连接到Lucy Alpha测试版。社区通过开发者计划、文档、SDK和激励计划积极参与平台开发。
+                        </p>
+                        <div class="mt-4 flex space-x-4">
+                            <a href="#" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fab fa-twitter text-xl mr-2"></i>
+                                <span class="text-sm">30万+ 粉丝</span>
+                            </a>
+                            <a href="#" class="flex items-center text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fab fa-discord text-xl mr-2"></i>
+                                <span class="text-sm">9.6万+ 会员</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-4">
+                                <i class="fas fa-code text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">开发者工具</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">
+                            计划推出Delysium开发者工具包，用于创建和部署人工智能代理，具有集成开发环境、模拟环境和高级调试工具。AgentLayer SDK使人工智能代理能够参与区块链网络并进行交易。
+                        </p>
+                        <ul class="mt-4 space-y-2 text-gray-700 dark:text-gray-300">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                集成开发环境
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                模拟测试环境
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                高级调试工具
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center mr-4">
+                                <i class="fas fa-sitemap text-2xl text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold">DMO生态角色</h3>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300 mb-4">
+                            Delysium多元宇宙运营商(DMO)是开发团队的延伸，帮助在游戏宇宙中创造多样化和独特的体验。运营元宇宙中的各种宇宙，可以自定义分发规则，并根据玩家行为和游戏内性能数据发布链上激励。
+                        </p>
+                        <div class="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                            <h4 class="font-semibold mb-2">DMO权限</h4>
+                            <ul class="space-y-1 text-gray-700 dark:text-gray-300 text-sm">
+                                <li>• 创建自定义游戏体验</li>
+                                <li>• 设置经济规则与激励</li>
+                                <li>• 发行特定宇宙代币</li>
+                                <li>• 建立专属社区</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 结论与延伸阅读 -->
+        <section class="py-16 px-4">
+            <div class="container mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6">
+                            <i class="fas fa-star text-indigo-600 dark:text-indigo-400 mr-3"></i>项目总结
+                        </h2>
+                        <div class="first-letter-drop text-gray-700 dark:text-gray-300">
+                            Delysium 在 Web3 领域创新地整合了人工智能和区块链技术。该项目的主要特点包括人工智能代理网络、Lucy 操作系统、YKILY 网络、$AGI 代币以及具有人工智能虚拟生物的开放世界游戏。Delysium 有望彻底改变人工智能代理经济和 GameFi 领域。该项目在去中心化技术不断发展的背景下展现出巨大的潜力。
+                        </div>
+                        <div class="mt-8">
+                            <h3 class="text-xl font-semibold mb-4">创新亮点</h3>
+                            <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+                                <li class="flex items-start">
+                                    <i class="fas fa-
