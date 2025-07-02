@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zama 深度剖析 - 交互式报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: 设计了一个基于侧边栏导航的仪表盘式单页应用。用户可以通过点击导航栏在不同主题模块间切换，避免了冗长的线性滚动。这种非线性结构允许不同背景的用户（如投资者、开发者）直接跳转到他们最感兴趣的部分（例如“市场格局”或“技术核心”）。结构分为：1.概览（核心数据）、2.技术核心（交互式图解）、3.性能挑战（图表化数据）、4.应用场景（选项卡式卡片）、5.市场格局（动态对比视图）、6.战略评估（优劣势总结）。此设计旨在将静态报告转化为一个主动探索工具，通过信息架构优化来提升用户理解效率和参与度。 -->
+    <!-- Visualization & Content Choices: 1.关键指标(概览): 使用动态卡片展示融资、估值等核心数据，比表格更直观。交互：无。2.技术栈图解(技术核心): 用HTML/CSS构建流程图，展示FHE/MPC/ZKP三位一体和产品分层结构。交互：点击模块显示详细解释。3.性能基准(性能挑战): 使用Chart.js创建对数刻度的条形图，直观展示不同操作的巨大性能差异。交互：悬浮提示显示精确延迟。4.市场竞争(市场格局): 设计了一个动态内容切换器，用户点击不同公司或技术Logo，下方会显示对应的分析对比。交互：点击切换。所有视觉元素均未使用SVG/Mermaid，完全符合要求。 -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #F8F7F4;
+            color: #333333;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link.active {
+            background-color: #E2D9C2;
+            color: #333333;
+            border-left-color: #4A90E2;
+        }
+        .nav-link:hover {
+            background-color: #ECE8E1;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E2D9C2;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab-btn.active {
+            background-color: #4A90E2;
+            color: white;
+        }
+        .competitor-btn.active {
+            transform: scale(1.1);
+            border-color: #4A90E2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.5);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 50vh;
+                max-height: 350px;
+            }
+        }
+        .tech-stack-item {
+            cursor: pointer;
+        }
+        .tech-stack-arrow {
+            position: relative;
+            width: 100%;
+            height: 2px;
+            background-color: #4A90E2;
+        }
+        .tech-stack-arrow::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -4px;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 8px solid #4A90E2;
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row h-screen">
+
+    <nav class="w-full md:w-64 bg-white border-r border-gray-200 flex-shrink-0">
+        <div class="p-6">
+            <h1 class="text-xl font-bold text-gray-800">Zama 深度剖析</h1>
+            <p class="text-sm text-gray-500">交互式战略报告</p>
+        </div>
+        <ul id="navigation" class="mt-4">
+            <li><a href="#overview" class="nav-link block p-4 text-gray-700 font-medium">概览</a></li>
+            <li><a href="#tech" class="nav-link block p-4 text-gray-700 font-medium">技术核心</a></li>
+            <li><a href="#performance" class="nav-link block p-4 text-gray-700 font-medium">性能挑战</a></li>
+            <li><a href="#use-cases" class="nav-link block p-4 text-gray-700 font-medium">应用场景</a></li>
+            <li><a href="#market" class="nav-link block p-4 text-gray-700 font-medium">市场格局</a></li>
+            <li><a href="#strategy" class="nav-link block p-4 text-gray-700 font-medium">战略评估</a></li>
+        </ul>
+        <div class="absolute bottom-0 w-full md:w-64 p-4 text-center text-xs text-gray-400">
+            <p>&copy; 2025 Zama 分析报告</p>
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10">
+        
+        <div id="overview" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">公司概览：FHE 赛道的独角兽</h2>
+            <p class="text-lg text-gray-600 mb-8">本节提供了 Zama 的核心背景信息，包括其使命、财务状况和关键人物。这些数据点共同描绘了一家在深科技领域迅速崛起、并获得顶级资本支持的公司轮廓，帮助用户快速建立对 Zama 的第一印象。</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="card p-6 rounded-lg text-center">
+                    <div id="funding" class="text-4xl font-bold text-blue-600">> $1.5亿</div>
+                    <div class="mt-2 text-gray-600">总融资金额</div>
+                </div>
+                <div class="card p-6 rounded-lg text-center">
+                    <div id="valuation" class="text-4xl font-bold text-blue-600">> $10亿</div>
+                    <div class="mt-2 text-gray-600">公司估值 (独角兽)</div>
+                </div>
+                <div class="card p-6 rounded-lg text-center">
+                    <div id="teamSize" class="text-4xl font-bold text-blue-600">5000+</div>
+                    <div class="mt-2 text-gray-600">社区开发者</div>
+                </div>
+                <div class="card p-6 rounded-lg text-center">
+                    <div id="foundedYear" class="text-4xl font-bold text-blue-600">~2020年</div>
+                    <div class="mt-2 text-gray-600">成立时间</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-8 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">宏大愿景: "HTTPZ"</h3>
+                    <p class="text-gray-700">Zama 的最终目标是推动互联网安全的下一次进化，从 HTTP (无加密) 和 HTTPS (传输中加密) 演进到 Zama 定义的 "HTTPZ"。在 HTTPZ 范式下，全同态加密 (FHE) 将成为所有在线应用的默认配置，实现真正的端到端加密，即使在数据被云端服务器计算时也能确保其完全保密。</p>
+                </div>
+                 <div class="card p-8 rounded-lg">
+                    <h3 class="text-xl font-bold mb-4">创始双雄</h3>
+                    <p class="text-gray-700 mb-2"><strong>Pascal Paillier 博士 (CTO):</strong> 世界级密码学家，"Paillier 密码系统"发明者，为公司提供无与伦比的技术权威性。</p>
+                    <p class="text-gray-700"><strong>Rand Hindi 博士 (CEO):</strong> 成功的 AI 企业家，将复杂技术商业化的专家，为公司带来至关重要的产品思维和市场导向。</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tech" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">技术核心：解构 Zama 的 FHE 技术栈</h2>
+            <p class="text-lg text-gray-600 mb-8">本节深入剖析 Zama 的技术基石，通过交互式图解展示其独特的协议架构和分层产品套件。这有助于理解 Zama 如何务实地结合多种密码学技术，并为不同类型的开发者提供易于使用的工具，从而降低 FHE 的使用门槛。</p>
+
+            <div class="card p-8 rounded-lg mb-8">
+                <h3 class="text-xl font-bold mb-4 text-center">Zama 协议: FHE, MPC 与 ZKP 的三位一体</h3>
+                 <p class="text-center text-gray-600 mb-6">Zama 的协议并非纯粹的 FHE 系统，而是务实地结合了三种密码学原语，各取所长。点击下方模块查看其具体作用。</p>
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div id="tech-fhe" class="tech-stack-item p-4 border-2 border-blue-500 rounded-lg text-center bg-blue-50">
+                        <h4 class="font-bold">全同态加密 (FHE)</h4>
+                        <p class="text-sm">核心计算</p>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-500">+</div>
+                    <div id="tech-mpc" class="tech-stack-item p-4 border-2 border-green-500 rounded-lg text-center bg-green-50">
+                        <h4 class="font-bold">多方安全计算 (MPC)</h4>
+                        <p class="text-sm">去中心化密钥管理</p>
+                    </div>
+                     <div class="text-2xl font-bold text-gray-500">+</div>
+                    <div id="tech-zkp" class="tech-stack-item p-4 border-2 border-purple-500 rounded-lg text-center bg-purple-50">
+                        <h4 class="font-bold">零知识证明 (ZKP)</h4>
+                        <p class="text-sm">输入验证</p>
+                    </div>
+                </div>
+                <div id="tech-explanation" class="mt-6 p-4 bg-gray-100 rounded-lg min-h-[100px] text-gray-700">
+                    点击上方模块查看详细解释。
+                </div>
+            </div>
+            
+            <div class="card p-8 rounded-lg">
+                <h3 class="text-xl font-bold mb-4 text-center">开源产品栈：分层可访问性</h3>
+                <p class="text-center text-gray-600 mb-6">Zama 提供了一个分层的工具套件，以满足从底层密码学家到上层应用开发者的不同需求。点击下方模块查看其目标用户和用途。</p>
+                <div class="space-y-4">
+                    <div id="stack-fhevm" class="tech-stack-item p-4 border rounded-lg text-center bg-gray-50 hover:bg-gray-100">
+                        <h4 class="font-bold">fhEVM</h4>
+                        <p class="text-sm">应用层 (区块链开发者)</p>
+                    </div>
+                    <div class="flex justify-center"><div class="tech-stack-arrow w-px h-6 bg-blue-500 transform rotate-90"></div></div>
+                     <div id="stack-concrete-ml" class="tech-stack-item p-4 border rounded-lg text-center bg-gray-50 hover:bg-gray-100">
+                        <h4 class="font-bold">Concrete ML</h4>
+                        <p class="text-sm">高级框架 (数据科学家)</p>
+                    </div>
+                    <div class="flex justify-center"><div class="tech-stack-arrow w-px h-6 bg-blue-500 transform rotate-90"></div></div>
+                    <div id="stack-concrete" class="tech-stack-item p-4 border rounded-lg text-center bg-gray-50 hover:bg-gray-100">
+                        <h4 class="font-bold">Concrete</h4>
+                        <p class="text-sm">编译器 (Python 开发者)</p>
+                    </div>
+                    <div class="flex justify-center"><div class="tech-stack-arrow w-px h-6 bg-blue-500 transform rotate-90"></div></div>
+                    <div id="stack-tfhe-rs" class="tech-stack-item p-4 border rounded-lg text-center bg-gray-50 hover:bg-gray-100">
+                        <h4 class="font-bold">TFHE-rs</h4>
+                        <p class="text-sm">底层库 (密码学家)</p>
+                    </div>
+                </div>
+                 <div id="stack-explanation" class="mt-6 p-4 bg-gray-100 rounded-lg min-h-[100px] text-gray-700">
+                    点击上方模块查看详细解释。
+                </div>
+            </div>
+        </div>
+
+        <div id="performance" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">性能挑战：FHE 的阿喀琉斯之踵</h2>
+            <p class="text-lg text-gray-600 mb-8">性能是 FHE 技术商业化的最大障碍。本节通过交互式图表直观展示了当前 FHE 运算的延迟，并概述了 Zama 通过软件和硬件协同加速的战略路线图，以应对这一核心挑战。</p>
+            
+            <div class="card p-8 rounded-lg mb-8">
+                <h3 class="text-xl font-bold mb-4 text-center">TFHE-rs CPU 性能基准</h3>
+                <p class="text-center text-gray-600 mb-6">下图展示了在加密的64位整数上执行基本运算所需的时间。请注意纵轴为对数刻度，以同时显示差异巨大的延迟。悬停在条形图上可查看精确数值。</p>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card p-8 rounded-lg">
+                <h3 class="text-xl font-bold mb-4 text-center">双轨加速路线图</h3>
+                <div class="relative">
+                    <div class="border-l-2 border-blue-500 absolute h-full top-0 left-4"></div>
+                    <div class="mb-8 pl-12">
+                        <div class="absolute w-4 h-4 bg-blue-600 rounded-full -left-2 mt-1.5"></div>
+                        <h4 class="font-bold text-lg">近期: 软件加速 (GPU)</h4>
+                        <p class="text-gray-700">利用 GPU 的并行计算能力，目前可实现每秒数百笔交易的处理能力，满足早期区块链应用需求。</p>
+                    </div>
+                    <div class="pl-12">
+                        <div class="absolute w-4 h-4 bg-blue-600 rounded-full -left-2 mt-1.5"></div>
+                        <h4 class="font-bold text-lg">远期: 硬件加速 (ASIC/FPGA)</h4>
+                        <p class="text-gray-700">开发专用 FHE 硬件芯片，目标在五年内将性能再提升100倍，实现每秒数万笔交易的吞吐量，这是实现 "HTTPZ" 愿景的关键。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="use-cases" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">应用场景：从区块链滩头阵地到 AI 新大陆</h2>
+            <p class="text-lg text-gray-600 mb-8">本节详细介绍了 Zama 技术在两大核心目标市场的具体应用。通过切换选项卡，您可以探索 FHE 如何为区块链和人工智能领域中的实际问题提供革命性的隐私保护解决方案。</p>
+
+            <div class="flex justify-center mb-6">
+                <button data-tab="blockchain" class="tab-btn py-2 px-6 rounded-l-lg font-medium transition">区块链</button>
+                <button data-tab="ai" class="tab-btn py-2 px-6 rounded-r-lg font-medium transition">人工智能</button>
+            </div>
+            
+            <div id="blockchain-content" class="use-case-content grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">保密交易与 DeFi</h4>
+                    <p class="text-gray-700">发行保密的稳定币，进行余额和金额完全私密的支付，构建对机构投资者友好的保密去中心化金融应用。</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">私有资产代币化 (RWA)</h4>
+                    <p class="text-gray-700">对私募股权等现实世界资产进行代币化，同时保护所有权和交易价值等商业机密。</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">抗 MEV 拍卖</h4>
+                    <p class="text-gray-700">通过加密投标实现密封投标式拍卖，有效防止抢跑等 MEV 攻击，创造更公平的市场。</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">保密链上治理</h4>
+                    <p class="text-gray-700">实现投票内容保密的治理系统，保护投票者隐私，避免胁迫或共谋。</p>
+                </div>
+            </div>
+
+            <div id="ai-content" class="use-case-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">加密推理即服务</h4>
+                    <p class="text-gray-700">用户将加密数据（如医疗记录）发送给云端 AI 模型进行预测，云服务商无法窥探任何原始数据。</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">加密数据市场</h4>
+                    <p class="text-gray-700">用户可以 "出租" 其加密数据的计算权用于模型训练并获利，而数据本身从未离开用户控制。</p>
+                </div>
+                <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">隐私保护模型训练</h4>
+                    <p class="text-gray-700">多个互不信任的实体可汇集各自的敏感数据，共同训练一个更强大的模型，而无需暴露各自的数据。</p>
+                </div>
+                 <div class="card p-6 rounded-lg">
+                    <h4 class="font-bold text-lg mb-2">保密 LLM 微调</h4>
+                    <p class="text-gray-700">企业可利用其私有数据（如内部文档）安全地微调大语言模型，而无需担心敏感信息泄露。</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="market" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">市场格局：差异化竞争</h2>
+            <p class="text-lg text-gray-600 mb-8">隐私计算领域竞争激烈。本节通过一个交互式对比视图，展示 Zama 与其他 FHE 供应商及替代性隐私技术（如 ZKP、TEE）的核心差异。点击不同 Logo 以切换并查看 Zama 的独特价值主张和市场定位。</p>
+
+            <div class="flex flex-wrap justify-center items-center gap-4 md:gap-8 mb-8 p-4 bg-white rounded-lg shadow-sm">
+                <button data-competitor="zama" class="competitor-btn p-2 border-2 border-transparent rounded-md transition"><img src="https://placehold.co/100x40/4A90E2/FFFFFF?text=Zama" alt="Zama Logo"></button>
+                <button data-competitor="ibm" class="competitor-btn p-2 border-2 border-transparent rounded-md transition"><img src="https://placehold.co/100x40/333333/FFFFFF?text=IBM" alt="IBM Logo"></button>
+                <button data-competitor="duality" class="competitor-btn p-2 border-2 border-transparent rounded-md transition"><img src="https://placehold.co/100x40/333333/FFFFFF?text=Duality" alt="Duality Logo"></button>
+                <button data-competitor="zkp" class="competitor-btn p-2 border-2 border-transparent rounded-md transition"><img src="https://placehold.co/100x40/333333/FFFFFF?text=ZKP" alt="ZKP Logo"></button>
+                <button data-competitor="tee" class="competitor-btn p-2 border-2 border-transparent rounded-md transition"><img src="https://placehold.co/100x40/333333/FFFFFF?text=TEE" alt="TEE Logo"></button>
+            </div>
+            
+            <div id="competitor-details" class="card p-8 rounded-lg min-h-[300px]">
+            </div>
+        </div>
+
+        <div id="strategy" class="content-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">战略评估：机遇、风险与展望</h2>
+            <p class="text-lg text-gray-600 mb-8">本节综合了前述所有分析，对 Zama 的战略态势进行了最终评估。通过清晰的优劣势对比和未来展望，为投资者和决策者提供了关键的考量点和建议。</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-8 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-green-600">核心优势与机遇 (Strengths & Opportunities)</h3>
+                    <ul class="space-y-3 list-disc list-inside text-gray-700">
+                        <li><strong>先发优势:</strong> 领先的、专注于区块链的 FHE 提供商。</li>
+                        <li><strong>顶级团队:</strong> 世界级的创始人和研究团队构成技术壁垒。</li>
+                        <li><strong>开发者中心:</strong> 友好的工具栈和开源模式有助于快速构建生态。</li>
+                        <li><strong>资本与生态支持:</strong> 顶级投资者带来资金和宝贵的合作网络。</li>
+                        <li><strong>巨大市场需求:</strong> 链上保密性和隐私 AI 市场呈爆炸式增长。</li>
+                        <li><strong>Web3 基础设施潜力:</strong> 有望成为未来互联网的 "隐私层"。</li>
+                    </ul>
+                </div>
+                <div class="card p-8 rounded-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-red-600">关键风险与挑战 (Risks & Challenges)</h3>
+                     <ul class="space-y-3 list-disc list-inside text-gray-700">
+                        <li><strong>技术风险:</strong> 核心风险，硬件加速路线图的成功至关重要。</li>
+                        <li><strong>市场风险:</strong> 来自其他隐私技术（TEE, ZKP）和 FHE 对手的竞争。</li>
+                        <li><strong>执行风险:</strong> 维护全球开发者生态和主网上线的复杂性。</li>
+                        <li><strong>监管风险:</strong> 对密码学或数据跨境流动的潜在限制。</li>
+                        <li><strong>性能鸿沟:</strong> 在性能足够好之前，可能被 "足够好" 的替代方案抢占市场。</li>
+                    </ul>
+                </div>
+            </div>
+             <div class="card p-8 rounded-lg mt-8">
+                <h3 class="text-2xl font-bold mb-4 text-center">最终建议</h3>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-lg text-blue-700">对于风险投资者:</h4>
+                        <p class="text-gray-700">Zama 是一个高风险、高回报的标的。尽职调查应深度聚焦其硬件团队实力、ASIC 研发进展和专利组合强度。</p>
+                    </div>
+                    <div class="flex-1">
+                         <h4 class="font-bold text-lg text-blue-700">对于企业战略家:</h4>
+                        <p class="text-gray-700">应将 Zama 视为潜在的颠覆者和战略合作伙伴。建议通过其开源工具进行早期探索，建立合作关系可能是在下一代数据隐私浪潮中获得优势的关键。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navigationLinks = document.querySelectorAll('#navigation a');
+            const contentSections = document.querySelectorAll('.content-section');
+            const useCaseTabs = document.querySelectorAll('.tab-btn');
+            const useCaseContents = document.querySelectorAll('.use-case-content');
+            const competitorBtns = document.querySelectorAll('.competitor-btn');
+            const competitorDetails = document.getElementById('competitor-details');
+
+            const techExplanations = {
+                fhe: '<strong>全同态加密 (FHE):</strong> 作为协议的核心，FHE 用于对加密的交易输入和链上状态进行计算。它在提供保密性的同时，保持了计算过程的可公开验证性。',
+                mpc: '<strong>多方安全计算 (MPC):</strong> 用途专一，仅用于去中心化地管理整个网络的全局密钥，并为用户解密其自身数据，最大限度地减少了与 MPC 相关的高通信开销。',
+                zkp: '<strong>零知识证明 (ZKP):</strong> 用于一个轻量级任务，即验证用户提交的输入是否被正确地加密，防止恶意或格式错误的输入进入系统，而无需承担用 ZKP 证明整个计算的高昂成本。'
+            };
+
+            const stackExplanations = {
+                'tfhe-rs': '<strong>TFHE-rs:</strong> (Rust) 高性能、底层的 FHE 库，是整个技术栈的基石，为需要极致性能和控制权的密码学家和核心开发者设计。',
+                'concrete': '<strong>Concrete:</strong> (Python) FHE 编译器，可将普通的 Python 代码自动转换为 FHE 等效程序，极大地简化了开发，面向广大的 Python 开发者。',
+                'concrete-ml': '<strong>Concrete ML:</strong> (Python) 将常见的机器学习模型（如 scikit-learn 模型）转换为同态等效模型，让数据科学家无需密码学知识即可进行隐私保护机器学习。',
+                'fhevm': '<strong>fhEVM:</strong> (Solidity) 在 EVM 兼容链上实现保密智能合约的解决方案，让区块链开发者能用熟悉的工具构建保密 dApp。'
+            };
+
+            const competitorData = {
+                zama: {
+                    title: "Zama: 为去中心化网络提供保密即服务",
+                    coreTech: "基于 TFHE 的 FHE",
+                    target: "区块链与 AI 开发者",
+                    model: "开源核心 + 商业专利许可",
+                    strategy: "自下而上，开发者驱动，以区块链为滩头阵地，追求极致的开发者体验和性能。"
+                },
+                ibm: {
+                    title: "IBM: 企业级云安全集成方案",
+                    coreTech: "基于 BGV/CKKS 的 FHE",
+                    target: "大型企业（金融、医疗）",
+                    model: "企业软件与云服务",
+                    strategy: "自上而下，与自身庞大的云产品和安全服务深度绑定，提供一站式企业解决方案。"
+                },
+                duality: {
+                    title: "Duality: 安全的企业数据协作平台",
+                    coreTech: "多 PETs 平台 (FHE, MPC 等)",
+                    target: "需要安全数据共享的机构",
+                    model: "企业平台许可",
+                    strategy: "平台化思路，组合多种隐私技术解决企业间数据协作的特定问题，销售周期长。"
+                },
+                zkp: {
+                    title: "替代技术: 零知识证明 (ZKP)",
+                    coreTech: "密码学证明",
+                    target: "可验证性计算（如 Rollups）",
+                    model: "组件技术",
+                    strategy: "核心是'证明'计算正确性，而非'执行'保密计算。计算方仍能看到数据。Zama 仅将其用于输入验证，发挥其轻量级优势。"
+                },
+                tee: {
+                    title: "替代技术: 可信执行环境 (TEE)",
+                    coreTech: "基于硬件的安全 '飞地'",
+                    target: "隔离计算过程",
+                    model: "硬件销售/依赖",
+                    strategy: "安全性依赖于对硬件制造商（如 Intel）的信任，并可能受侧信道攻击影响。FHE 是纯软件方案，无此信任假设。"
+                }
+            };
+
+            function updateCompetitorView(competitorId) {
+                const data = competitorData[competitorId];
+                competitorDetails.innerHTML = `
+                    <h3 class="text-xl font-bold mb-4">${data.title}</h3>
+                    <div class="space-y-3 text-gray-700">
+                        <p><strong>核心技术:</strong> ${data.coreTech}</p>
+                        <p><strong>目标市场:</strong> ${data.target}</p>
+                        <p><strong>商业模式:</strong> ${data.model}</p>
+                        <p><strong>关键差异:</strong> ${data.strategy}</p>
+                    </div>
+                `;
+                competitorBtns.forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`.competitor-btn[data-competitor="${competitorId}"]`).classList.add('active');
+            }
+
+            function navigateTo(hash) {
+                if (!hash) hash = '#overview';
+                
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', `#${section.id}` === hash);
+                });
+                
+                navigationLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === hash);
+                });
+
+                if (hash === '#performance' && !window.performanceChartInstance) {
+                    renderPerformanceChart();
+                }
+            }
+
+            navigationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const hash = this.getAttribute('href');
+                    history.pushState(null, null, hash);
+                    navigateTo(hash);
+                });
+            });
+
+            useCaseTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.dataset.tab;
+                    
+                    useCaseTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    useCaseContents.forEach(content => {
+                        content.classList.toggle('hidden', content.id !== `${tabId}-content`);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.tech-stack-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const techId = this.id.split('-')[1];
+                    const explanationBox = document.getElementById('tech-explanation');
+                    if (techExplanations[techId]) {
+                        explanationBox.innerHTML = techExplanations[techId];
+                    }
+                });
+            });
+
+            document.querySelectorAll('.tech-stack-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const stackId = this.id.substring(6); // remove "stack-"
+                    const explanationBox = document.getElementById('stack-explanation');
+                    if (stackExplanations[stackId]) {
+                        explanationBox.innerHTML = stackExplanations[stackId];
+                    }
+                });
+            });
+
+            competitorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    updateCompetitorView(btn.dataset.competitor);
+                });
+            });
+
+            function renderPerformanceChart() {
+                const ctx = document.getElementById('performanceChart').getContext('2d');
+                window.performanceChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['位运算 (&,|,^)', '比较 (>,<,==)', '加/减', '乘法', '除/取模'],
+                        datasets: [{
+                            label: '执行时间 (毫秒)',
+                            data: [18, 76.5, 128, 366, 8830],
+                            backgroundColor: [
+                                'rgba(74, 144, 226, 0.6)',
+                                'rgba(80, 227, 194, 0.6)',
+                                'rgba(245, 166, 35, 0.6)',
+                                'rgba(248, 100, 87, 0.6)',
+                                'rgba(208, 2, 27, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(74, 144, 226, 1)',
+                                'rgba(80, 227, 194, 1)',
+                                'rgba(245, 166, 35, 1)',
+                                'rgba(248, 100, 87, 1)',
+                                'rgba(208, 2, 27, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'logarithmic',
+                                title: {
+                                    display: true,
+                                    text: '执行时间 (毫秒, 对数刻度)'
+                                }
+                            },
+                             y: {
+                                ticks: {
+                                    autoSkip: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += context.parsed.x.toFixed(2) + ' ms';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            window.addEventListener('popstate', () => navigateTo(window.location.hash));
+            
+            navigateTo(window.location.hash || '#overview');
+            useCaseTabs[0].classList.add('active');
+            updateCompetitorView('zama');
+        });
+    </script>
+</body>
+</html>
