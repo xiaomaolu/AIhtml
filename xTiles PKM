@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xTiles 笔记应用深度分析报告 - 交互式应用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #c2410c;
+            border-bottom-color: #c2410c;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .feature-tab.active-tab {
+            color: #c2410c;
+            border-color: #c2410c;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800">
+    <!-- Chosen Palette: Warm Neutral Harmony (Stone, Amber, Orange) -->
+    <!-- Application Structure Plan: A top-down, thematic single-page application designed for intuitive exploration. The structure begins with a high-level overview, then dives into interactive sections for core features, pricing, user feedback, and competitive analysis. A sticky navigation bar allows users to jump to any section, facilitating a non-linear journey. This dashboard-like approach transforms the dense report into a digestible and engaging discovery tool, prioritizing user understanding over mirroring the report's linear structure. Key interactions include tabbed content for features, interactive charts for pricing and feedback, and visually distinct cards to highlight key problems and solutions. -->
+    <!-- Visualization & Content Choices: 
+        1. Pricing Comparison: Report Info -> xTiles cost vs. competitor stack cost. Goal -> Compare. Viz -> Bar Chart (Chart.js). Interaction -> Static with tooltips. Justification -> A bar chart provides a stark, immediate visual comparison of cost, powerfully supporting the value proposition.
+        2. User Feedback Sentiment: Report Info -> Qualitative pros and cons from app store reviews. Goal -> Compare/Inform. Viz -> Horizontal Bar Chart (Chart.js). Interaction -> Clickable bars to filter/highlight corresponding text lists. Justification -> Visually summarizes the balance of feedback and interactively links quantitative sentiment to qualitative details.
+        3. Feature Exploration: Report Info -> Extensive list of features. Goal -> Organize. Viz -> Tabbed Interface (HTML/CSS/JS). Interaction -> Click tabs to reveal content. Justification -> Condenses a large volume of information into a manageable, user-controlled format, preventing overwhelm.
+        4. Competitive Positioning: Report Info -> xTiles vs. Notion/Miro. Goal -> Show Relationships. Viz -> HTML/CSS Diagram. Interaction -> Hover effects. Justification -> A visual diagram is more impactful than text for explaining market relationships, created without forbidden SVG/Mermaid.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <header class="sticky top-0 z-50 w-full shadow-md glassmorphism">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-orange-800">xTiles 深度分析</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link">概览</a>
+                <a href="#features" class="nav-link">核心功能</a>
+                <a href="#pricing" class="nav-link">定价与价值</a>
+                <a href="#feedback" class="nav-link">用户之声</a>
+                <a href="#competition" class="nav-link">竞争定位</a>
+            </div>
+            <div class="md:hidden">
+                <select id="mobile-nav" class="bg-transparent border border-stone-300 rounded-md p-2 text-stone-700">
+                    <option value="#overview">概览</option>
+                    <option value="#features">核心功能</option>
+                    <option value="#pricing">定价与价值</option>
+                    <option value="#feedback">用户之声</option>
+                    <option value="#competition">竞争定位</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section id="overview" class="text-center min-h-[60vh] flex flex-col justify-center items-center section-fade-in">
+            <h2 class="text-4xl md:text-5xl font-bold text-stone-900 mb-4">一个适应你思维的协作工作区</h2>
+            <p class="text-lg md:text-xl text-stone-600 max-w-3xl mx-auto mb-8">
+                本报告深度剖析 xTiles，一款旨在整合笔记、任务和项目管理的“一体化”应用。它通过灵活的视觉组织与结构化文档相结合，挑战 Notion 与 Miro，致力于成为用户的“第二大脑”。
+            </p>
+            <a href="#features" class="bg-orange-600 text-white font-bold py-3 px-8 rounded-full hover:bg-orange-700 transition-colors duration-300">
+                探索核心功能
+            </a>
+        </section>
+
+        <section id="problems" class="py-16 section-fade-in">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900">xTiles 解决了哪些痛点？</h2>
+                <p class="mt-2 text-stone-600">从信息分散到协作低效，xTiles 为现代知识工作者提供了全面的解决方案。本节将报告中提到的用户核心痛点提炼为几个关键领域，展示了 xTiles 如何通过其设计理念和功能来应对这些挑战。</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="font-bold text-xl mb-2 text-orange-800">信息分散与无序</h3>
+                    <p class="text-stone-600">提供一个“整理一切的第二大脑”，集中管理散落各处的想法、任务和笔记，告别数字碎片化。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="font-bold text-xl mb-2 text-orange-800">缺乏专注与任务管理困难</h3>
+                    <p class="text-stone-600">将笔记无缝转换为可执行任务，并通过统一的仪表盘进行管理，帮助用户从构思平稳过渡到执行。</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <h3 class="font-bold text-xl mb-2 text-orange-800">团队协作效率低下</h3>
+                    <p class="text-stone-600">支持实时头脑风暴和远程协作，通过分区工作区轻松管理团队和项目，促进高效协同。</p>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="features" class="py-16 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900">核心功能探索</h2>
+                <p class="mt-2 text-stone-600">xTiles 的强大之处在于其多功能性的融合。本节将报告中详述的众多功能归纳为四个核心领域。点击下方标签，了解其如何满足从个人构思到复杂团队项目的多样化需求。</p>
+            </div>
+            <div>
+                <div class="flex justify-center border-b border-stone-200 mb-8 flex-wrap">
+                    <button data-tab="org" class="feature-tab active-tab py-2 px-6 font-medium text-lg text-stone-500 hover:text-orange-700 focus:outline-none border-b-2 border-transparent">灵活组织</button>
+                    <button data-tab="tasks" class="feature-tab py-2 px-6 font-medium text-lg text-stone-500 hover:text-orange-700 focus:outline-none border-b-2 border-transparent">任务管理</button>
+                    <button data-tab="pm" class="feature-tab py-2 px-6 font-medium text-lg text-stone-500 hover:text-orange-700 focus:outline-none border-b-2 border-transparent">项目视图</button>
+                    <button data-tab="collab" class="feature-tab py-2 px-6 font-medium text-lg text-stone-500 hover:text-orange-700 focus:outline-none border-b-2 border-transparent">团队协作</button>
+                </div>
+                <div id="feature-content" class="bg-white p-8 rounded-lg shadow-lg min-h-[250px] transition-opacity duration-500">
+                    <div id="org" class="feature-panel active-panel">
+                        <h3 class="text-2xl font-bold mb-4 text-orange-800">视觉化与结构化的完美结合</h3>
+                        <p class="text-stone-600">xTiles 独有的“磁贴结构”让用户可以在自由形式的画布上随意拖放笔记、图片和文件，如同使用电子软木板进行头脑风暴。同时，它也提供传统的“文档风格页面”，满足长文写作的需求，真正做到了适应多样化的思维方式。</p>
+                    </div>
+                    <div id="tasks" class="feature-panel hidden">
+                         <h3 class="text-2xl font-bold mb-4 text-orange-800">从想法到行动</h3>
+                        <p class="text-stone-600">轻松将任何笔记或想法块转化为可执行的任务。在统一的面板中，通过列表或日历视图高效管理所有待办事项和事件。支持重复任务、提醒和多种规划周期，确保计划稳步推进。</p>
+                    </div>
+                    <div id="pm" class="feature-panel hidden">
+                         <h3 class="text-2xl font-bold mb-4 text-orange-800">多维视角，掌控全局</h3>
+                        <p class="text-stone-600">为复杂项目提供多种视图，包括表格、看板、日历和卡片视图。用户可以即时切换视角，以不同维度洞察项目进展，无论是管理CRM、产品路线图还是内容日历，都能得心应手。</p>
+                    </div>
+                    <div id="collab" class="feature-panel hidden">
+                         <h3 class="text-2xl font-bold mb-4 text-orange-800">无缝协同，激发团队潜能</h3>
+                        <p class="text-stone-600">支持实时头脑风暴和远程协作，团队成员的想法可以协同转化为具体的文档和项目。通过分区工作区和精细的权限管理，轻松组织内部团队和外部客户，并可一键分享具有视觉吸引力的项目成果。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing" class="py-16 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900">定价与价值</h2>
+                <p class="mt-2 text-stone-600">本节深入分析 xTiles 的定价策略。通过交互式图表和详细表格，我们将可视化报告中提到的成本效益，并清晰对比不同订阅计划的功能差异，帮助您评估其价值主张。</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-stone-800">一体化方案的成本优势</h3>
+                    <p class="text-stone-600">报告指出，xTiles 的专业版（$8.25/月）旨在取代多个独立应用的组合（如Notion, Miro, Trello等），后者总成本可能高达 $49/月。这种捆绑策略为个人和团队提供了显著的潜在经济效益。</p>
+                    <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-4 rounded-r-lg">
+                        <p class="font-bold">特别优惠</p>
+                        <p>xTiles 为教育工作者、学生和非营利组织提供 50% 的折扣，体现了其对社区的承诺。</p>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-16 overflow-x-auto">
+                <table class="w-full min-w-[800px] text-left border-collapse">
+                    <thead>
+                        <tr>
+                            <th class="p-4 border-b-2 border-stone-200 font-bold text-stone-800">计划</th>
+                            <th class="p-4 border-b-2 border-stone-200 font-bold text-stone-800 text-center">免费版</th>
+                            <th class="p-4 border-b-2 border-stone-200 font-bold text-stone-800 text-center">入门版</th>
+                            <th class="p-4 border-b-2 border-stone-200 font-bold text-stone-800 text-center">专业版</th>
+                            <th class="p-4 border-b-2 border-stone-200 font-bold text-stone-800 text-center">团队版</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white">
+                            <td class="p-4 border-b border-stone-200 font-medium">价格</td>
+                            <td class="p-4 border-b border-stone-200 text-center">$0</td>
+                            <td class="p-4 border-b border-stone-200 text-center">$5.75/用户</td>
+                            <td class="p-4 border-b border-stone-200 text-center">$8.25/用户*</td>
+                            <td class="p-4 border-b border-stone-200 text-center">$24.92/团队*</td>
+                        </tr>
+                         <tr class="bg-stone-50">
+                            <td class="p-4 border-b border-stone-200 font-medium">理想用户</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-sm">初学者</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-sm">个人/小型团队</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-sm">高级用户/专业人士</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-sm">需要固定价格的团队</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <td class="p-4 border-b border-stone-200 font-medium">无限页面与空间</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-orange-600 font-bold">✗</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                        </tr>
+                        <tr class="bg-stone-50">
+                            <td class="p-4 border-b border-stone-200 font-medium">时间线视图</td>
+                           <td class="p-4 border-b border-stone-200 text-center text-orange-600 font-bold">✗</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-orange-600 font-bold">✗</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                        </tr>
+                        <tr class="bg-white">
+                            <td class="p-4 border-b border-stone-200 font-medium">AI 助手 (即将推出)</td>
+                           <td class="p-4 border-b border-stone-200 text-center text-orange-600 font-bold">✗</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-orange-600 font-bold">✗</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                            <td class="p-4 border-b border-stone-200 text-center text-green-600 font-bold">✓</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-stone-500 mt-2 text-right">* 价格为按年付费的月均价，可能变动。</p>
+            </div>
+        </section>
+
+        <section id="feedback" class="py-16 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900">用户之声</h2>
+                <p class="mt-2 text-stone-600">本节将报告中分散的用户评价进行整合分析。核心概念广受好评，但移动端体验是当前挑战。通过交互式图表和并列的优缺点列表，您可以快速把握用户情绪的核心，并了解开发者正如何积极响应与改进。</p>
+            </div>
+             <div class="bg-white p-8 rounded-lg shadow-lg">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold mb-4 text-stone-800">用户反馈情绪分析</h3>
+                        <p class="text-stone-600 mb-4">图表直观展示了用户反馈中的主要积极方面与待改进点。点击图表条目可高亮显示右侧对应的评论摘要，帮助您建立数据与质性反馈之间的联系。</p>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="feedbackChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <div id="feedback-pros" class="feedback-details p-4 rounded-lg transition-all duration-300">
+                            <h4 class="font-bold text-lg text-green-700 mb-2">👍 优点</h4>
+                            <ul class="list-disc list-inside space-y-1 text-stone-600">
+                                <li>被誉为“Notion 的绝佳替代品”</li>
+                                <li>界面“非常简单直观”</li>
+                                <li>能处理比 Trello 更大的想法</li>
+                                <li>视觉组织方式如同“老式软木板”</li>
+                                <li>有效构建“第二大脑”</li>
+                            </ul>
+                        </div>
+                        <div id="feedback-cons" class="feedback-details p-4 rounded-lg transition-all duration-300 mt-4">
+                            <h4 class="font-bold text-lg text-red-700 mb-2">👎 待改进</h4>
+                            <ul class="list-disc list-inside space-y-1 text-stone-600">
+                                <li>移动端按钮偶有无响应</li>
+                                <li>应用在某些情况下感觉“笨重”</li>
+                                <li>移动端长文本编辑体验不佳</li>
+                                <li>规划器功能需要手动刷新</li>
+                                <li>自由创建画板功能受限</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="competition" class="py-16 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-stone-900">竞争定位</h2>
+                <p class="mt-2 text-stone-600">xTiles 将自己定位为“一体化”的生产力强国，旨在整合 Notion 和 Miro 的核心优势。本节将报告中的竞争分析转化为直观的图示和要点，清晰展示其独特的市场价值主张。</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-stone-800">独特价值主张 (UVP)</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <span class="text-orange-600 font-bold text-xl mr-3">✓</span>
+                            <p><strong class="text-stone-700">混合组织模式:</strong> 结合了视觉化的“磁贴”和结构化的“文档”，适应不同任务需求。</p>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-orange-600 font-bold text-xl mr-3">✓</span>
+                            <p><strong class="text-stone-700">“第二大脑”理念:</strong> 与流行的个人知识管理方法论保持一致，吸引核心用户群。</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-orange-600 font-bold text-xl mr-3">✓</span>
+                            <p><strong class="text-stone-700">成本效益:</strong> 通过取代多个应用，为个人和团队提供高性价比的解决方案。</p>
+                        </li>
+                         <li class="flex items-start">
+                            <span class="text-orange-600 font-bold text-xl mr-3">✓</span>
+                            <p><strong class="text-stone-700">积极迭代:</strong> 开发团队对用户反馈响应迅速，产品处于持续进化中。</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="relative flex justify-center items-center h-80 p-8">
+                     <div class="absolute w-40 h-40 md:w-48 md:h-48 bg-orange-500 text-white flex items-center justify-center rounded-full z-10 shadow-2xl text-center p-4">
+                        <span class="text-2xl md:text-3xl font-bold">xTiles</span>
+                    </div>
+                    <div class="absolute top-0 transform -translate-y-4 bg-blue-100 text-blue-800 py-2 px-4 rounded-full shadow-lg text-sm md:text-base">Notion (结构化)</div>
+                    <div class="absolute right-0 transform translate-x-4 md:translate-x-10 bg-yellow-100 text-yellow-800 py-2 px-4 rounded-full shadow-lg text-sm md:text-base">Miro (视觉化)</div>
+                    <div class="absolute bottom-0 transform translate-y-4 bg-green-100 text-green-800 py-2 px-4 rounded-full shadow-lg text-sm md:text-base">Trello (任务卡片)</div>
+                     <div class="absolute left-0 transform -translate-x-4 md:-translate-x-10 text-stone-600 text-center text-sm md:text-base">
+                        <p class="font-bold">整合了</p>
+                        <p>→</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="bg-stone-800 text-stone-300 py-8 mt-16">
+        <div class="container mx-auto text-center px-6">
+            <p>这是一个基于公开研究报告生成的交互式分析应用。</p>
+            <p>所有数据和分析均源自 xTiles 官方网站及应用商店公开信息。</p>
+            <p class="mt-4 text-sm">&copy; 2024. 仅供演示用途。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const featureTabs = document.querySelectorAll('.feature-tab');
+            const featurePanels = document.querySelectorAll('.feature-panel');
+            const hiddenClass = 'hidden';
+
+            featureTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetId = tab.dataset.tab;
+
+                    featureTabs.forEach(t => t.classList.remove('active-tab'));
+                    tab.classList.add('active-tab');
+                    
+                    featurePanels.forEach(panel => {
+                        panel.classList.toggle(hiddenClass, panel.id !== targetId);
+                    });
+                });
+            });
+
+            const costData = {
+                labels: ['xTiles 专业版', '独立应用组合'],
+                datasets: [{
+                    label: '每月成本 (美元)',
+                    data: [8.25, 49.00],
+                    backgroundColor: [
+                        'rgba(234, 88, 12, 0.7)',
+                        'rgba(120, 113, 108, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(234, 88, 12, 1)',
+                        'rgba(120, 113, 108, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const costChartCtx = document.getElementById('costChart').getContext('2d');
+            new Chart(costChartCtx, {
+                type: 'bar',
+                data: costData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return '$' + value; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'xTiles vs 独立应用组合 - 每月成本对比',
+                            font: { size: 16 },
+                            color: '#44403c'
+                        }
+                    }
+                }
+            });
+
+            const feedbackData = {
+                labels: ['优点', '待改进'],
+                datasets: [{
+                    label: '反馈点数量',
+                    data: [5, 5],
+                     backgroundColor: [
+                        'rgba(22, 163, 74, 0.7)',
+                        'rgba(220, 38, 38, 0.7)'
+                    ],
+                    borderColor: [
+                         'rgba(22, 163, 74, 1)',
+                        'rgba(220, 38, 38, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const feedbackChartCtx = document.getElementById('feedbackChart').getContext('2d');
+            const feedbackChart = new Chart(feedbackChartCtx, {
+                type: 'bar',
+                data: feedbackData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: '用户反馈情绪概览',
+                            font: { size: 16 },
+                            color: '#44403c'
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const prosDiv = document.getElementById('feedback-pros');
+                            const consDiv = document.getElementById('feedback-cons');
+                            
+                            prosDiv.style.backgroundColor = 'transparent';
+                            consDiv.style.backgroundColor = 'transparent';
+
+                            if (index === 0) {
+                                prosDiv.style.backgroundColor = 'rgba(22, 163, 74, 0.1)';
+                            } else if (index === 1) {
+                                consDiv.style.backgroundColor = 'rgba(220, 38, 38, 0.1)';
+                            }
+                        }
+                    }
+                }
+            });
+            
+            const sections = document.querySelectorAll('.section-fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => observer.observe(section));
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const navObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.id;
+                        navLinks.forEach(link => {
+                           link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                        });
+                        const mobileNavSelect = document.getElementById('mobile-nav');
+                        mobileNavSelect.value = `#${id}`;
+                    }
+                });
+            }, { rootMargin: '-30% 0px -70% 0px'});
+
+            document.querySelectorAll('main section[id]').forEach(section => navObserver.observe(section));
+
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                document.querySelector(e.target.value).scrollIntoView();
+            });
+        });
+    </script>
+</body>
+</html>
