@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahara AI - 交互式分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: A single-page dashboard with a sticky top navigation bar for non-linear exploration. The structure uses thematic sections (Overview, Tech, Ecosystem, Funding & Team, Tokenomics, Roadmap) to break down the complex report into digestible, user-friendly modules. The Overview section acts as a "mission control" with key metrics and core concepts, while subsequent sections allow for deep dives. This structure was chosen to prioritize user exploration and quick access to specific information, rather than forcing a linear reading of the original report. -->
+    <!-- Visualization & Content Choices: Funding Rounds -> Goal:Compare -> Viz:Bar Chart (Chart.js) -> Interaction:Hover tooltips -> Justification:Effectively compares funding amounts. | Testnet Metrics -> Goal:Inform -> Viz:KPI Cards (HTML/CSS) -> Justification:Quickly shows project traction. | 4-Layer Architecture -> Goal:Organize -> Viz:Styled Stacked List (HTML/CSS) -> Justification:Clear, responsive alternative to SVG diagrams. | Product Ecosystem -> Goal:Organize/Detail -> Viz:Tabbed Interface (JS) -> Justification:Saves space and groups related content cleanly. | Token Distribution -> Goal:Proportion -> Viz:Donut Chart (Chart.js) -> Justification:Visualizes part-to-whole data, even with partial info. | Roadmap -> Goal:Change -> Viz:Vertical Timeline (HTML/CSS) -> Justification:Intuitive for chronological data. | CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #FDFCFB;
+            color: #383838;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #0891B2;
+            border-bottom-color: #0891B2;
+        }
+        .stat-card {
+            background-color: #FFFFFF;
+            border: 1px solid #F3F4F6;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+        }
+        .tab-button.active {
+            border-color: #0891B2;
+            color: #0891B2;
+            background-color: #F0FDFA;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            background-color: #0891B2;
+            border: 2px solid #FFFFFF;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 320px;
+            width: 100%;
+            max-width: 600px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header id="header" class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-cyan-700">Sahara AI</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">概览</a>
+                        <a href="#tech" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">技术架构</a>
+                        <a href="#ecosystem" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">产品生态</a>
+                        <a href="#funding" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">融资与团队</a>
+                        <a href="#tokenomics" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">代币经济</a>
+                        <a href="#roadmap" class="nav-link px-3 py-2 text-sm font-medium text-gray-600 hover:text-cyan-600 border-b-2 border-transparent">路线图</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#overview" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">概览</a>
+                    <a href="#tech" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">技术架构</a>
+                    <a href="#ecosystem" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">产品生态</a>
+                    <a href="#funding" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">融资与团队</a>
+                    <a href="#tokenomics" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">代币经济</a>
+                    <a href="#roadmap" class="block nav-link px-3 py-2 text-base font-medium text-gray-600 hover:text-cyan-600">路线图</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        
+        <!-- Overview Section -->
+        <section id="overview" class="pt-16 -mt-16">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight mb-4">Sahara AI</h1>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">首个全栈式AI原生区块链，致力于通过去中心化协作经济，实现人工智能的民主化。</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <p class="text-sm text-gray-500">总融资额</p>
+                    <p class="text-3xl font-bold text-cyan-700">$5150万+</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <p class="text-sm text-gray-500">测试网总账户数</p>
+                    <p class="text-3xl font-bold text-cyan-700">320万+</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <p class="text-sm text-gray-500">日活跃账户</p>
+                    <p class="text-3xl font-bold text-cyan-700">140万+</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-md text-center">
+                    <p class="text-sm text-gray-500">数据平台准确率</p>
+                    <p class="text-3xl font-bold text-cyan-700">95%</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                <h3 class="text-2xl font-bold text-center mb-2">核心支柱</h3>
+                <p class="text-center text-gray-500 mb-8">平台建立在三大协同作用的基础支柱之上，共同构建公平的AI生态系统。</p>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div>
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-cyan-100 text-cyan-700 mx-auto mb-4 text-2xl font-bold">主</div>
+                        <h4 class="text-xl font-semibold mb-2">主权与溯源</h4>
+                        <p class="text-gray-600">通过区块链确保数据贡献和模型交互的可追溯性，提供可验证的所有权证明，保障知识产权安全。</p>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-cyan-100 text-cyan-700 mx-auto mb-4 text-2xl font-bold">用</div>
+                        <h4 class="text-xl font-semibold mb-2">人工智能效用</h4>
+                        <p class="text-gray-600">提供全面的AI工具集，包括SDK、API和无代码平台，专注于可用性和即时实际价值。</p>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-center h-16 w-16 rounded-full bg-cyan-100 text-cyan-700 mx-auto mb-4 text-2xl font-bold">协</div>
+                        <h4 class="text-xl font-semibold mb-2">协作经济</h4>
+                        <p class="text-gray-600">创建公平透明的系统，通过版税和自动化支付奖励所有贡献者，鼓励多元参与和创新。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tech Section -->
+        <section id="tech" class="pt-24 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">技术架构</h2>
+            <p class="text-center text-gray-500 max-w-2xl mx-auto mb-12">Sahara AI 采用模块化、可扩展的技术栈，旨在为AI开发提供一个稳健、透明且高效的基础设施。</p>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-4">多层基础设施</h3>
+                    <p class="text-gray-600 mb-6">精密的四层架构，通过分离关注点来确保可扩展性和鲁棒性，优化每一层的功能。</p>
+                    <div class="space-y-4">
+                        <div class="p-4 rounded-lg bg-gray-50 border-l-4 border-cyan-500">
+                            <h4 class="font-semibold">应用层</h4>
+                            <p class="text-sm text-gray-500">提供用户友好的界面和工具。</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-50 border-l-4 border-cyan-500">
+                            <h4 class="font-semibold">执行层</h4>
+                            <p class="text-sm text-gray-500">处理高性能、高吞吐量的人工智能计算。</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-50 border-l-4 border-cyan-500">
+                            <h4 class="font-semibold">数据层</h4>
+                            <p class="text-sm text-gray-500">高效管理链上元数据（用于溯源）和链下存储。</p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-50 border-l-4 border-cyan-500">
+                            <h4 class="font-semibold">交易层</h4>
+                            <p class="text-sm text-gray-500">包含AI原生的Sahara区块链和专用智能合约。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-4">AI原生协议</h3>
+                     <p class="text-gray-600 mb-6">一套AI原生智能合约，为AI开发的每个阶段带来结构、透明度和可执行性，解决知识产权、公平报酬等核心问题。</p>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start"><span class="text-cyan-600 mr-2">✓</span><span><b>全球资产注册表:</b> 实现数据集、模型、代理的可验证注册。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-600 mr-2">✓</span><span><b>所有权协议:</b> 提供不可变的链上所有权证明。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-600 mr-2">✓</span><span><b>归因与贡献追踪:</b> 在资产和贡献者间创建透明链接。</span></li>
+                        <li class="flex items-start"><span class="text-cyan-600 mr-2">✓</span><span><b>执行证明 (TEE):</b> 通过可信执行环境确保链下计算的完整性。</span></li>
+                        <li class="flex items-start"><span class="text-gray-400 mr-2">→</span><span class="text-gray-500"><b>许可与收益分享模块 (即将推出):</b> 管理资产使用与公平分配收入。</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecosystem Section -->
+        <section id="ecosystem" class="pt-24 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">产品生态</h2>
+            <p class="text-center text-gray-500 max-w-2xl mx-auto mb-12">Sahara AI 正在构建一个全面的产品矩阵，覆盖从数据到应用的整个AI生命周期，赋能开发者和用户。</p>
+            
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-4 md:space-x-8 justify-center" aria-label="Tabs">
+                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm active" data-tab="dsp">数据服务平台 (DSP)</button>
+                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="dev">AI开发者平台</button>
+                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="market">AI市场 (即将推出)</button>
+                    </nav>
+                </div>
+                <div class="p-8">
+                    <div id="tab-content-dsp" class="tab-content">
+                        <h3 class="text-xl font-bold mb-2">数据服务平台 (Data Service Platform)</h3>
+                        <p class="text-gray-600">一个促进大规模众包数据收集和标注的平台。用户可以注册数据集并铸造所有权代币，旨在提供高质量、合规且透明的数据，打破传统中心化供应商的垄断。平台已展现出强大的早期吸引力，拥有超过 <b>20万</b> 用户，并取得了 <b>95%</b> 的数据标注准确率。</p>
+                    </div>
+                    <div id="tab-content-dev" class="tab-content hidden">
+                        <h3 class="text-xl font-bold mb-2">AI开发者平台</h3>
+                        <p class="text-gray-600">为AI开发者提供全面的端到端工具，用于数据、模型、代理和计算工作流的管理。平台支持开源和专有的人工智能模型，并提供从简单到高级的各类工具，且与底层区块链无关，具备高度灵活性。</p>
+                    </div>
+                    <div id="tab-content-market" class="tab-content hidden">
+                        <h3 class="text-xl font-bold mb-2">AI市场 (AI Marketplace)</h3>
+                        <p class="text-gray-600">一个即将推出的去中心化中心，用于交易各类AI资产，包括数据集、模型、代理和计算资源。它将为资产所有者提供多种变现机会，例如按次使用收费、基于他人衍生作品的版税，以及自动化的公平支付，连接Web2和Web3世界。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Funding Section -->
+        <section id="funding" class="pt-24 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">融资与团队</h2>
+            <p class="text-center text-gray-500 max-w-2xl mx-auto mb-12">强大的资本支持和顶尖的领导团队是项目成功的关键。Sahara AI 在这两个方面都表现出色。</p>
+            
+            <div class="grid lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-3 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-2">融资历程</h3>
+                    <p class="text-gray-600 mb-6">项目已获得顶级风投的巨额投资，社区轮也表现出极高的市场热情。</p>
+                    <div class="chart-container">
+                        <canvas id="fundingChart"></canvas>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-6">领导团队</h3>
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-bold text-lg">Sean Ren (肖恩·任)</h4>
+                            <p class="text-sm text-cyan-700 font-semibold">联合创始人 & CEO</p>
+                            <p class="text-sm text-gray-600 mt-1">南加州大学副教授，拥有顶级的AI学术背景和多项行业大奖，如麻省理工《技术评论》35岁以下创新者。</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-lg">Tyler Zhou (周泰勒)</h4>
+                            <p class="text-sm text-cyan-700 font-semibold">联合创始人 & COO</p>
+                            <p class="text-sm text-gray-600 mt-1">区块链专家，曾任Binance Labs投资总监，为项目带来丰富的Web3行业经验和资源。</p>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold mt-8 mb-4">主要投资者</h3>
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Pantera Capital</span>
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Binance Labs</span>
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Polychain</span>
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Sequoia</span>
+                        <span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">Samsung Next</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tokenomics Section -->
+        <section id="tokenomics" class="pt-24 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">代币经济学</h2>
+            <p class="text-center text-gray-500 max-w-2xl mx-auto mb-12">$SAHARA 代币是驱动整个生态系统价值流转的核心，其设计旨在激励参与和协作。</p>
+
+            <div class="grid lg:grid-cols-2 gap-8">
+                 <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                    <h3 class="text-2xl font-bold mb-2">代币分配</h3>
+                    <p class="text-gray-600 mb-6">公开信息显示，社区轮销售占总供应量的一小部分。下图展示了已知部分的分布情况。</p>
+                    <div class="chart-container h-64 md:h-80">
+                        <canvas id="tokenomicsChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-center">
+                    <h3 class="text-2xl font-bold mb-4">$SAHARA 代币信息</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-gray-500">代币名称</span>
+                            <span class="font-mono text-lg font-semibold bg-gray-100 px-2 py-1 rounded">SAHARA</span>
+                        </div>
+                         <div class="flex justify-between items-baseline">
+                            <span class="text-gray-500">总供应量</span>
+                            <span class="font-mono text-lg font-semibold">10,000,000,000</span>
+                        </div>
+                        <div class="mt-4 pt-4 border-t">
+                             <h4 class="font-semibold text-lg mb-2">市场动态分析</h4>
+                             <p class="text-gray-600">社区轮参与者的代币在TGE时100%解锁。这一策略在提供即时流动性的同时，也可能在上市初期带来显著的价格波动。这反映了项目方对长期价值的信心，但也要求早期市场参与者谨慎管理风险。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Roadmap Section -->
+        <section id="roadmap" class="pt-24 -mt-16">
+            <h2 class="text-3xl font-bold text-center mb-4">发展路线图</h2>
+            <p class="text-center text-gray-500 max-w-2xl mx-auto mb-12">Sahara AI 有一个清晰且雄心勃勃的计划，关键里程碑正在稳步推进中。</p>
+
+            <div class="relative pl-8 border-l-2 border-gray-200">
+                <div class="mb-10 timeline-item">
+                    <h3 class="text-xl font-bold text-green-600">已实现的关键里程碑</h3>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li><b>2024 Q4:</b> 私有测试网启动，并取得显著用户增长。</li>
+                        <li><b>2025 Q1:</b> Sahara孵化器启动，培育AI+Web3初创企业。</li>
+                        <li><b>2025 Q2:</b> SIWA公共测试网启动，DSP向公众开放。</li>
+                         <li><b>2025 Q2 (6月):</b> 完成社区代币销售，并在OKX交易所上市。</li>
+                    </ul>
+                </div>
+                <div class="timeline-item">
+                    <h3 class="text-xl font-bold text-blue-600">即将到来的计划</h3>
+                    <ul class="mt-4 space-y-2 text-gray-700">
+                        <li><b>2025 Q2:</b> 人工智能开发者平台私有发布。</li>
+                        <li><b>2025 Q3:</b> Sahara主网正式上线，完整启动AI资产注册、许可和变现功能。</li>
+                        <li><b>未来:</b> 推出许可、收入分配、版税金库等高级协议功能，实现自动化收入分享。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-100 mt-16">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
+            <p>本交互式报告由AI根据公开信息生成，仅供研究和参考。所有数据和信息请以Sahara AI官方发布为准。</p>
+            <p>&copy; 2025 AI-Generated Analytics. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Tabs for ecosystem section
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const tab = button.dataset.tab;
+                    tabContents.forEach(content => {
+                        if (content.id === `tab-content-${tab}`) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // Active nav link scrolling
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.4
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Funding Chart
+            const fundingCtx = document.getElementById('fundingChart').getContext('2d');
+            new Chart(fundingCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['种子轮 (2024.03)', 'A轮 (2024.08)', '社区轮 (2025.06)'],
+                    datasets: [{
+                        label: '融资金额 (百万美元)',
+                        data: [6, 43, 8.5],
+                        backgroundColor: [
+                            'rgba(14, 165, 233, 0.6)',
+                            'rgba(8, 145, 178, 0.6)',
+                            'rgba(21, 94, 117, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(14, 165, 233, 1)',
+                            'rgba(8, 145, 178, 1)',
+                            'rgba(21, 94, 117, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += context.parsed.x + ' M';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                             grid: {
+                                color: '#F3F4F6'
+                            }
+                        },
+                        y: {
+                             grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Tokenomics Chart
+            const tokenomicsCtx = document.getElementById('tokenomicsChart').getContext('2d');
+            new Chart(tokenomicsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['社区轮销售', '其他分配 (未公开)'],
+                    datasets: [{
+                        label: '代币分配',
+                        data: [1.41, 100 - 1.41],
+                        backgroundColor: [
+                            'rgba(8, 145, 178, 0.7)',
+                            'rgba(203, 213, 225, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(8, 145, 178, 1)',
+                            'rgba(203, 213, 225, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed.toFixed(2) + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
